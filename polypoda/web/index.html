@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>llama.cpp</title>
+  <link rel="icon" href="/icon.png">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <img class="mark" src="/icon.png" alt="">
+      <div class="brand">
+        <p class="eyebrow">Local inference</p>
+        <h1>llama.cpp</h1>
+        <p id="network" class="network"></p>
+      </div>
+      <div class="top-meta">
+        <span id="device-chip" class="chip">Detecting GPU</span>
+        <p id="version" class="version">Looking up the runtime</p>
+        <button type="button" id="runtime" class="text-btn">Change binaries</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="stack">
+        <article class="card">
+          <div class="card-h">
+            <h2>Model</h2>
+            <button type="button" id="rescan" class="text-btn">Rescan</button>
+          </div>
+          <p id="model-name" class="model-name">No model selected</p>
+          <p id="model-meta" class="model-meta">Choose a GGUF file to load on the GPU.</p>
+
+          <label class="field">
+            <span>Installed models</span>
+            <select id="known"></select>
+          </label>
+
+          <label class="field">
+            <span>Model file</span>
+            <div class="split">
+              <input id="model" spellcheck="false" autocomplete="off" placeholder="Path to a .gguf file">
+              <button type="button" id="browse-model" class="ghost">Browse</button>
+            </div>
+          </label>
+
+          <div class="switch-row">
+            <div>
+              <strong>Vision projector</strong>
+              <p id="mmproj-hint">Leave this off for a text model.</p>
+            </div>
+            <button type="button" id="use-mmproj" class="switch" role="switch" aria-checked="false" aria-label="Load vision projector"></button>
+          </div>
+
+          <label class="field" id="mmproj-wrap">
+            <span>Projector file</span>
+            <div class="split">
+              <input id="mmproj" spellcheck="false" autocomplete="off" placeholder="mmproj .gguf">
+              <button type="button" id="browse-mmproj" class="ghost">Browse</button>
+            </div>
+          </label>
+        </article>
+
+        <article class="card" id="hf-card">
+          <div class="card-h">
+            <h2>Hugging Face</h2>
+          </div>
+          <p class="lede">Search GGUF weight files, or the vision projector that lets a model see images. A model becomes the selected model. A projector is saved next to it and turned on.</p>
+          <div class="seg hf-mode" id="hf-mode">
+            <button type="button" data-value="model" aria-pressed="true">Models</button>
+            <button type="button" data-value="projector">Projectors</button>
+          </div>
+          <div class="split hf-search">
+            <input id="hf-query" spellcheck="false" autocomplete="off" placeholder="Search, for example Qwen or Llama">
+            <button type="button" id="hf-search" class="ghost">Search</button>
+          </div>
+          <div id="hf-results" class="hf-list"></div>
+          <div id="hf-progress" class="hf-progress" hidden>
+            <p id="hf-progress-label"></p>
+            <div class="bar"><div id="hf-bar"></div></div>
+            <div class="hf-actions">
+              <button type="button" id="hf-cancel" class="ghost danger">Cancel</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-h">
+            <h2>Configuration</h2>
+          </div>
+          <div class="grid">
+            <label class="field">
+              <span>Device</span>
+              <select id="device"></select>
+            </label>
+            <label class="field">
+              <span>GPU layers</span>
+              <input id="gpu_layers" spellcheck="false" placeholder="all">
+            </label>
+            <div class="field">
+              <span>Fit to VRAM</span>
+              <div class="seg" data-target="fit">
+                <button type="button" data-value="on">On</button>
+                <button type="button" data-value="off">Off</button>
+              </div>
+            </div>
+            <label class="field">
+              <span>Context</span>
+              <input id="ctx" inputmode="numeric" placeholder="0">
+            </label>
+            <label class="field">
+              <span>Temperature</span>
+              <input id="temp" inputmode="decimal">
+            </label>
+            <label class="field">
+              <span>Top-p</span>
+              <input id="top_p" inputmode="decimal">
+            </label>
+            <label class="field">
+              <span>Top-k</span>
+              <input id="top_k" inputmode="numeric">
+            </label>
+            <label class="field">
+              <span>Threads</span>
+              <input id="threads" inputmode="numeric" placeholder="auto">
+            </label>
+            <div class="field">
+              <span>Flash attention</span>
+              <div class="seg" data-target="flash_attn">
+                <button type="button" data-value="auto">Auto</button>
+                <button type="button" data-value="on">On</button>
+                <button type="button" data-value="off">Off</button>
+              </div>
+            </div>
+          </div>
+          <p class="hint">Context 0 uses the model default. GPU layers “all” offloads every layer. An empty thread count lets llama.cpp choose. Fit trims settings so the model stays in VRAM.</p>
+
+          <details class="more">
+            <summary>System prompt and extra arguments</summary>
+            <label class="field">
+              <span>System prompt</span>
+              <textarea id="system" rows="3" placeholder="Optional instruction sent with every chat"></textarea>
+            </label>
+            <label class="field">
+              <span>Extra arguments</span>
+              <input id="extra" spellcheck="false" placeholder="--reasoning off">
+            </label>
+          </details>
+          <input type="hidden" id="fit" value="on">
+          <input type="hidden" id="flash_attn" value="auto">
+        </article>
+      </section>
+
+      <aside class="stack">
+        <article class="card run">
+          <div class="card-h">
+            <h2>Run</h2>
+            <span id="dot" class="dot"></span>
+          </div>
+          <p id="notice" class="notice" hidden></p>
+          <p id="status" class="status">Starting</p>
+          <div class="grid two">
+            <label class="field">
+              <span>Host</span>
+              <input id="host" spellcheck="false" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Port</span>
+              <input id="port" inputmode="numeric">
+            </label>
+          </div>
+          <button type="button" id="start" class="primary">Start server</button>
+          <button type="button" id="chat" class="secondary">Chat in a terminal</button>
+          <div class="actions">
+            <a id="open" class="ghost" href="#" target="_blank" rel="noreferrer">Open web UI</a>
+            <button type="button" id="stop" class="ghost danger">Stop</button>
+          </div>
+        </article>
+
+        <article class="card" id="devices-card">
+          <div class="card-h">
+            <h2>Devices</h2>
+          </div>
+          <p class="lede">The model runs on this PC. Pick which machine it should operate: this desktop, another Windows PC running the companion, or an Android phone over wireless debugging.</p>
+          <div id="device-list" class="device-list"></div>
+          <details class="device-help">
+            <summary>Add a Windows laptop or PC</summary>
+            <p class="hint">On the other Windows PC, install once, then start the companion:</p>
+            <pre id="companion-cmd-windows" class="device-cmd"></pre>
+            <p class="hint">It registers itself when <code>--hub</code> points at this app. You can also paste its URL and token here.</p>
+            <label class="field"><span>Name</span><input id="remote-name" placeholder="Laptop"></label>
+            <label class="field"><span>Companion URL</span><input id="remote-url" placeholder="http://100.x.x.x:47340"></label>
+            <label class="field"><span>Token</span><input id="remote-token" placeholder="token from companion"></label>
+            <input type="hidden" id="remote-kind" value="windows">
+            <button type="button" id="remote-add" class="secondary">Add companion</button>
+          </details>
+          <details class="device-help">
+            <summary>Add a Linux laptop or PC</summary>
+            <p class="hint">On the Linux machine, install once. For mouse and keyboard, also install <code>xdotool</code> (and <code>wmctrl</code> or screenshot tools such as <code>gnome-screenshot</code> / <code>scrot</code>).</p>
+            <pre id="companion-cmd-linux" class="device-cmd"></pre>
+            <p class="hint">Debian/Ubuntu example: <code>sudo apt install xdotool wmctrl gnome-screenshot</code></p>
+            <label class="field"><span>Name</span><input id="remote-name-linux" placeholder="Linux laptop"></label>
+            <label class="field"><span>Companion URL</span><input id="remote-url-linux" placeholder="http://100.x.x.x:47340"></label>
+            <label class="field"><span>Token</span><input id="remote-token-linux" placeholder="token from companion"></label>
+            <button type="button" id="remote-add-linux" class="secondary">Add Linux companion</button>
+          </details>
+          <details class="device-help">
+            <summary>Add an Android phone</summary>
+            <p class="hint">On the phone: Developer options → Wireless debugging → Pair device with pairing code. Enter the pairing host:port and code, then connect with the debugging host:port (often the same IP, different port).</p>
+            <p id="adb-status" class="hint"></p>
+            <div class="grid two">
+              <label class="field"><span>Pair address</span><input id="adb-pair-addr" placeholder="100.x.x.x:37123"></label>
+              <label class="field"><span>Pairing code</span><input id="adb-pair-code" inputmode="numeric" placeholder="123456"></label>
+            </div>
+            <button type="button" id="adb-pair" class="ghost">Pair</button>
+            <label class="field"><span>Connect address</span><input id="adb-connect-addr" placeholder="100.x.x.x:5555"></label>
+            <button type="button" id="adb-connect" class="secondary">Connect phone</button>
+          </details>
+        </article>
+
+        <article class="card" id="computer-card">
+          <div class="card-h">
+            <h2>Computer</h2>
+          </div>
+          <p class="lede">Give the model control of the selected device. Every action is listed here. Stop takes control back.</p>
+          <label class="field">
+            <span>Device</span>
+            <select id="agent-device"></select>
+          </label>
+          <label class="field">
+            <span>Task</span>
+            <textarea id="agent-goal" rows="3" placeholder="For example: open Notepad and type hello"></textarea>
+          </label>
+          <label class="field">
+            <span>Max steps</span>
+            <div class="split agent-steps">
+              <input id="agent-steps" inputmode="numeric" value="20">
+              <button type="button" id="agent-unlimited" class="ghost" aria-pressed="false">Unlimited</button>
+            </div>
+          </label>
+          <button type="button" id="agent-start" class="primary">Use selected device</button>
+          <button type="button" id="agent-stop" class="secondary" hidden>Stop</button>
+          <p id="agent-status" class="hint"></p>
+          <pre id="agent-log" class="agent-log">Waiting for a task.</pre>
+        </article>
+
+        <article class="card log-card">
+          <div class="card-h">
+            <h2>Log</h2>
+          </div>
+          <pre id="log">Waiting for a launch.</pre>
+        </article>
+      </aside>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

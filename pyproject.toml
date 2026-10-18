@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polypoda"
+version = "0.1.0"
+description = "Local llama.cpp launcher with Hugging Face downloads and multi-device computer use"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Iheb Dridi" }]
+dependencies = [
+  "Pillow>=10.0.0",
+]
+keywords = ["llama.cpp", "gguf", "local-llm", "computer-use"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+]
+
+[project.urls]
+Homepage = "https://github.com/IhebDridi/reimagined-fiesta-personal-llm-polypoda"
+Repository = "https://github.com/IhebDridi/reimagined-fiesta-personal-llm-polypoda"
+
+[project.scripts]
+polypoda = "polypoda.app:main"
+polypoda-companion = "polypoda.companion:main"
+
+[tool.setuptools.packages.find]
+include = ["polypoda*"]
+
+[tool.setuptools.package-data]
+polypoda = ["web/*", "llama.png", "llama.ico"]

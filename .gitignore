@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env
+*.partial
+launcher/__pycache__/
+polypoda/__pycache__/
+
+# Large local artifacts — download llama.cpp binaries and models separately
+runtime/
+models/
+*.gguf
+
+# Local editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Scratch
+_*.py
+!polypoda/__init__.py
+*.log
