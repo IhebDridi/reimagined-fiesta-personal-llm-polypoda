@@ -22,7 +22,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Scratch
-_*.py
-!polypoda/__init__.py
+# Scratch scripts at repo root
+/_*.py
 *.log
